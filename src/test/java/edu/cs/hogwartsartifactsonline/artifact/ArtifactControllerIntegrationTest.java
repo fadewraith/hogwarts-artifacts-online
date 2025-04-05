@@ -35,6 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @DisplayName("Integration tests for Artifact API endpoints")
 @Tag("integration")
+@ActiveProfiles(value = "dev")
 public class ArtifactControllerIntegrationTest {
 
     @Autowired
