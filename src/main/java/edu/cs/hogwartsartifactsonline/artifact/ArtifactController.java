@@ -5,6 +5,7 @@ import edu.cs.hogwartsartifactsonline.artifact.converter.ArtifactToArtifactDtoCo
 import edu.cs.hogwartsartifactsonline.artifact.dto.ArtifactDto;
 import edu.cs.hogwartsartifactsonline.system.Result;
 import edu.cs.hogwartsartifactsonline.system.StatusCode;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,16 +18,19 @@ public class ArtifactController {
     private final ArtifactService artifactService;
     private final ArtifactToArtifactDtoConverter artifactToArtifactDtoConverter;
     private final ArtifactDtoToArtifactConverter artifactDtoToArtifactConverter;
+    private final MeterRegistry meterRegistry;
 
-    public ArtifactController(ArtifactService artifactService, ArtifactToArtifactDtoConverter artifactToArtifactDtoConverter, ArtifactDtoToArtifactConverter artifactDtoToArtifactConverter) {
+    public ArtifactController(ArtifactService artifactService, ArtifactToArtifactDtoConverter artifactToArtifactDtoConverter, ArtifactDtoToArtifactConverter artifactDtoToArtifactConverter, MeterRegistry meterRegistry) {
         this.artifactService = artifactService;
         this.artifactToArtifactDtoConverter = artifactToArtifactDtoConverter;
         this.artifactDtoToArtifactConverter = artifactDtoToArtifactConverter;
+        this.meterRegistry = meterRegistry;
     }
 
     @GetMapping("/{artifactId}")
     public Result findArtifactById(@PathVariable("artifactId") String artifactId) {
         Artifact artifact = this.artifactService.findById(artifactId);
+        meterRegistry.counter("artifact.id." + artifactId).increment();
         ArtifactDto artifactDto = this.artifactToArtifactDtoConverter.convert(artifact);
         return new Result(true, StatusCode.SUCCESS, "Find one success", artifactDto);
     }
