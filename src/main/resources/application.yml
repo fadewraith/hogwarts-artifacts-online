@@ -11,3 +11,38 @@ api:
     base-url: /api/v1
 server:
   port: 80
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env,beans,configprops,heapdump,httpexchanges,loggers,mappings,custom-beans
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+    env:
+      show-values: always
+    configprops:
+      show-values: always
+  info:
+    build:
+      enabled: true
+    env:
+      enabled: true
+    git:
+      enabled: true
+      mode: full
+    java:
+      enabled: true
+    os:
+      enabled: true
+info:
+  app:
+    name: hogwarts-artifacts-online
+    description: A web application that manages artifacts and wizards for Hogwarts School of Witchcraft and Wizardry.
+    version: @project.version@
+    author: Learning Paths
+    links:
+      youtube: https://youtube.com/playlist?list=PLqq9AhcMm2oPdXXFT3fzjaKLsVymvMXaY&si=KqHE53Y1Mm06OA98
+      github: https://github.com/fadewraith/hogwarts-artifacts-online
