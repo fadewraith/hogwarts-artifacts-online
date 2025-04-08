@@ -72,11 +72,12 @@ public class SecurityConfiguration {
 //                                disallow everything else
                                 .anyRequest().authenticated() // good practice to have this at the end
                 )
-                .headers(headers -> headers.frameOptions().disable())
+                .headers(headers -> headers.frameOptions(Customizer.withDefaults()).disable())
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable()) // this is for h2 browser console access
                 .httpBasic(httpBasic -> httpBasic.authenticationEntryPoint(this.customBasicAuthenticationEntryPoint))
-                .oauth2ResourceServer(oauth2ResourceServer -> oauth2ResourceServer.jwt().and()
+                .oauth2ResourceServer(oauth2ResourceServer -> oauth2ResourceServer
+                        .jwt(Customizer.withDefaults())
                         .authenticationEntryPoint(this.customBearerTokenAuthenticationEntryPoint)
                         .accessDeniedHandler(this.customBearerTokenAccessDeniedHandler))
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
