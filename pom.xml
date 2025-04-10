@@ -146,6 +146,7 @@
 				<configuration>
 					<reuseForks>false</reuseForks>
 					<forkCount>1</forkCount>
+					<argLine>-XX:+EnableDynamicAgentLoading</argLine>
 				</configuration>
 			</plugin>
 			<plugin>
