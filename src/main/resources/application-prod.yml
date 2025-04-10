@@ -12,3 +12,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none # Turn off the DDL auto generation.
+ai:
+  openai:
+    endpoint: ${AI_OPENAI_ENDPOINT:https://api.openai.com/v1/chat/completions} # env variable with a default value
+    api-key: ${AI_OPENAI_API_KEY:YOUR_API_KEY} # env variable with a default value
