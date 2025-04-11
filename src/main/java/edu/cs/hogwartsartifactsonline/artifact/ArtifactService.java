@@ -14,9 +14,12 @@ import io.micrometer.observation.annotation.Observed;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional
@@ -93,5 +96,39 @@ public class ArtifactService {
 
     public Page<Artifact> findAllPagination(Pageable pageable) {
         return this.artifactRepository.findAll(pageable);
+    }
+
+    /**
+     * Finds artifacts based on the provided search criteria and returns a paginated result.
+     * The method dynamically builds a JPA Specification based on the search criteria map.
+     * Supported criteria keys:
+     * - "id": Filters artifacts by their ID.
+     * - "name": Filters artifacts by a partial match in their name (case-insensitive).
+     * - "description": Filters artifacts by a partial match in their description (case-insensitive).
+     * - "ownerName": Filters artifacts by the owner's name (case-insensitive).
+     *
+     * @param searchCriteria A map containing the search criteria as key-value pairs.
+     * @param pageable       Pagination information.
+     * @return A paginated list of artifacts matching the search criteria.
+     */
+    public Page<Artifact> findByCriteria(Map<String, String> searchCriteria, Pageable pageable) {
+        Specification<Artifact> specification = Specification.where(null);
+
+        if(StringUtils.hasLength(searchCriteria.get("id"))) {
+            specification = specification.and(ArtifactSpecs.hasId(searchCriteria.get("id")));
+        }
+
+        if(StringUtils.hasLength(searchCriteria.get("name"))) {
+            specification = specification.and(ArtifactSpecs.containsName(searchCriteria.get("name")));
+        }
+
+        if(StringUtils.hasLength(searchCriteria.get("description"))) {
+            specification = specification.and(ArtifactSpecs.containsDescription(searchCriteria.get("description")));
+        }
+
+        if(StringUtils.hasLength(searchCriteria.get("ownerName"))) {
+            specification = specification.and(ArtifactSpecs.hasOwnerName(searchCriteria.get("ownerName")));
+        }
+        return this.artifactRepository.findAll(specification, pageable);
     }
 }
