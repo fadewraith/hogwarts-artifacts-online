@@ -73,6 +73,18 @@ public class ArtifactControllerIntegrationTest {
     }
 
     @Test
+    @DisplayName("Check findAllArtifactsPagination (GET)")
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
+        // Reset H2 database before calling this test case.
+    void testFindAllArtifactsPaginationSuccess() throws Exception {
+        this.mockMvc.perform(get(this.baseUrl + "/artifacts/pagination").accept(MediaType.APPLICATION_JSON).header(HttpHeaders.AUTHORIZATION, this.token))
+                .andExpect(jsonPath("$.flag").value(true))
+                .andExpect(jsonPath("$.code").value(StatusCode.SUCCESS))
+                .andExpect(jsonPath("$.message").value("Find All Success"))
+                .andExpect(jsonPath("$.data.content", Matchers.hasSize(6)));
+    }
+
+    @Test
     @DisplayName("Check findArtifactById (GET)")
     void testFindArtifactByIdSuccess() throws Exception {
         this.mockMvc.perform(get(this.baseUrl + "/artifacts/1250808601744904191").accept(MediaType.APPLICATION_JSON).header(HttpHeaders.AUTHORIZATION, this.token))
