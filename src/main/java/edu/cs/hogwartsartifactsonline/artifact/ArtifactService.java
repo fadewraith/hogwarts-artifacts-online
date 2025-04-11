@@ -12,6 +12,8 @@ import edu.cs.hogwartsartifactsonline.system.exception.ObjectNotFoundException;
 import io.micrometer.core.annotation.Timed;
 import io.micrometer.observation.annotation.Observed;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -87,5 +89,9 @@ public class ArtifactService {
 
         // Retrieve the AI-generated text and return to the controller.
         return chatResponse.choices().get(0).message().content();
+    }
+
+    public Page<Artifact> findAllPagination(Pageable pageable) {
+        return this.artifactRepository.findAll(pageable);
     }
 }

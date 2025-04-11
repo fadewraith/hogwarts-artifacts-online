@@ -8,6 +8,8 @@ import edu.cs.hogwartsartifactsonline.system.Result;
 import edu.cs.hogwartsartifactsonline.system.StatusCode;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -80,4 +82,13 @@ public class ArtifactController {
         String artifactSummary = this.artifactService.summarize(artifactDtos);
         return new Result(true, StatusCode.SUCCESS, "Summarize Success", artifactSummary);
     }
+
+    @GetMapping("/pagination")
+    public Result findAllArtifactsPagination(Pageable pageable) {
+        Page<Artifact> artifactPage = this.artifactService.findAllPagination(pageable);
+        Page<ArtifactDto> artifactDtoPage = artifactPage.map(this.artifactToArtifactDtoConverter::convert);
+        return new Result(true, StatusCode.SUCCESS, "Find All Success", artifactDtoPage);
+    }
+
+
 }
