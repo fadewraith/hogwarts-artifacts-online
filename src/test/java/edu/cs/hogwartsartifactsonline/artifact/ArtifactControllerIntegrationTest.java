@@ -53,7 +53,7 @@ public class ArtifactControllerIntegrationTest {
     void setUp() throws Exception {
 //        ResultActions resultActions = this.mockMvc.perform(post(this.baseUrl + "/auth/login").header(HttpHeaders.AUTHORIZATION,
 //                "Basic " + Base64Utils.encodeToString("john:123456".getBytes())));
-        ResultActions resultActions = this.mockMvc.perform(post(this.baseUrl + "/users/login").with(httpBasic("john", "123456"))); // httpBasic() is from spring-security-test.
+        ResultActions resultActions = this.mockMvc.perform(post(this.baseUrl + "/users/login").with(httpBasic("john", "Test@123"))); // httpBasic() is from spring-security-test.
         MvcResult mvcResult = resultActions.andDo(print()).andReturn();
         String contentAsString = mvcResult.getResponse().getContentAsString();
         JSONObject json = new JSONObject(contentAsString);

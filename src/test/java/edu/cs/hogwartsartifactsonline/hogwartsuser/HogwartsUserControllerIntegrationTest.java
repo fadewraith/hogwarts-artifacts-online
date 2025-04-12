@@ -46,7 +46,7 @@ public class HogwartsUserControllerIntegrationTest {
     @BeforeEach
     void setUp() throws Exception {
         // User john has all permissions.
-        ResultActions resultActions = this.mockMvc.perform(post(this.baseUrl + "/users/login").with(httpBasic("john", "123456"))); // httpBasic() is from spring-security-test.
+        ResultActions resultActions = this.mockMvc.perform(post(this.baseUrl + "/users/login").with(httpBasic("john", "Test@123"))); // httpBasic() is from spring-security-test.
         MvcResult mvcResult = resultActions.andDo(print()).andReturn();
         String contentAsString = mvcResult.getResponse().getContentAsString();
         JSONObject json = new JSONObject(contentAsString);
@@ -65,14 +65,48 @@ public class HogwartsUserControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("Check findUserById (GET)")
-    void testFindUserByIdSuccess() throws Exception {
+    @DisplayName("Check findUserById (GET): User with ROLE_admin Accessing Any User's Info")
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
+    void testFindUserByIdWithAdminAccessingAnyUsersInfo() throws Exception {
         this.mockMvc.perform(get(this.baseUrl + "/users/2").accept(MediaType.APPLICATION_JSON).header(HttpHeaders.AUTHORIZATION, this.token))
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.code").value(StatusCode.SUCCESS))
                 .andExpect(jsonPath("$.message").value("Find One Success"))
                 .andExpect(jsonPath("$.data.id").value(2))
                 .andExpect(jsonPath("$.data.username").value("eric"));
+    }
+
+    @Test
+    @DisplayName("Check findUserById (GET): User with ROLE_user Accessing Own Info")
+    void testFindUserByIdWithUserAccessingOwnInfo() throws Exception {
+        ResultActions resultActions = this.mockMvc.perform(post(this.baseUrl + "/users/login").with(httpBasic("eric", "Test@123"))); // httpBasic() is from spring-security-test.
+        MvcResult mvcResult = resultActions.andDo(print()).andReturn();
+        String contentAsString = mvcResult.getResponse().getContentAsString();
+        JSONObject json = new JSONObject(contentAsString);
+        String ericToken = "Bearer " + json.getJSONObject("data").getString("token");
+
+        this.mockMvc.perform(get(this.baseUrl + "/users/2").accept(MediaType.APPLICATION_JSON).header(HttpHeaders.AUTHORIZATION, ericToken))
+                .andExpect(jsonPath("$.flag").value(true))
+                .andExpect(jsonPath("$.code").value(StatusCode.SUCCESS))
+                .andExpect(jsonPath("$.message").value("Find One Success"))
+                .andExpect(jsonPath("$.data.id").value(2))
+                .andExpect(jsonPath("$.data.username").value("eric"));
+    }
+
+    @Test
+    @DisplayName("Check findUserById (GET): User with ROLE_user Accessing Another Users Info")
+    void testFindUserByIdWithUserAccessingAnotherUsersInfo() throws Exception {
+        ResultActions resultActions = this.mockMvc.perform(post(this.baseUrl + "/users/login").with(httpBasic("eric", "Test@123"))); // httpBasic() is from spring-security-test.
+        MvcResult mvcResult = resultActions.andDo(print()).andReturn();
+        String contentAsString = mvcResult.getResponse().getContentAsString();
+        JSONObject json = new JSONObject(contentAsString);
+        String ericToken = "Bearer " + json.getJSONObject("data").getString("token");
+
+        this.mockMvc.perform(get(this.baseUrl + "/users/1").accept(MediaType.APPLICATION_JSON).header(HttpHeaders.AUTHORIZATION, ericToken))
+                .andExpect(jsonPath("$.flag").value(false))
+                .andExpect(jsonPath("$.code").value(StatusCode.FORBIDDEN))
+                .andExpect(jsonPath("$.message").value("No permission."))
+                .andExpect(jsonPath("$.data").value("Access Denied"));
     }
 
     @Test
@@ -91,7 +125,7 @@ public class HogwartsUserControllerIntegrationTest {
     void testAddUserSuccess() throws Exception {
         HogwartsUser hogwartsUser = new HogwartsUser();
         hogwartsUser.setUsername("lily");
-        hogwartsUser.setPassword("123456");
+        hogwartsUser.setPassword("Test@123");
         hogwartsUser.setEnabled(true);
         hogwartsUser.setRoles("admin user"); // The delimiter is space.
 
@@ -139,7 +173,7 @@ public class HogwartsUserControllerIntegrationTest {
 
     @Test
     @DisplayName("Check updateUser with valid input (PUT)")
-    void testUpdateUserSuccess() throws Exception {
+    void testUpdateUserWithAdminUpdatingAnyUsersInfo() throws Exception {
         HogwartsUser hogwartsUser = new HogwartsUser();
         hogwartsUser.setUsername("tom123"); // Username is changed. It was tom.
         hogwartsUser.setEnabled(false);
@@ -200,6 +234,55 @@ public class HogwartsUserControllerIntegrationTest {
     }
 
     @Test
+    @DisplayName("Check updateUser with valid input (PUT): User with ROLE_user Updating Own Info")
+    void testUpdateUserWithUserUpdatingOwnInfo() throws Exception {
+        ResultActions resultActions = this.mockMvc.perform(post(this.baseUrl + "/users/login").with(httpBasic("eric", "Test@123"))); // httpBasic() is from spring-security-test.
+        MvcResult mvcResult = resultActions.andDo(print()).andReturn();
+        String contentAsString = mvcResult.getResponse().getContentAsString();
+        JSONObject json = new JSONObject(contentAsString);
+        String ericToken = "Bearer " + json.getJSONObject("data").getString("token");
+
+        HogwartsUser hogwartsUser = new HogwartsUser();
+        hogwartsUser.setUsername("eric123"); // Username is changed. It was eric.
+        hogwartsUser.setEnabled(true);
+        hogwartsUser.setRoles("user");
+
+        String hogwartsUserJson = this.objectMapper.writeValueAsString(hogwartsUser);
+
+        this.mockMvc.perform(put(this.baseUrl + "/users/2").contentType(MediaType.APPLICATION_JSON).content(hogwartsUserJson).accept(MediaType.APPLICATION_JSON).header(HttpHeaders.AUTHORIZATION, ericToken))
+                .andExpect(jsonPath("$.flag").value(true))
+                .andExpect(jsonPath("$.code").value(StatusCode.SUCCESS))
+                .andExpect(jsonPath("$.message").value("Update Success"))
+                .andExpect(jsonPath("$.data.id").value(2))
+                .andExpect(jsonPath("$.data.username").value("eric123"))
+                .andExpect(jsonPath("$.data.enabled").value(true))
+                .andExpect(jsonPath("$.data.roles").value("user"));
+    }
+
+    @Test
+    @DisplayName("Check updateUser with valid input (PUT): User with ROLE_user Updating Another Users Info")
+    void testUpdateUserWithUserUpdatingAnotherUsersInfo() throws Exception {
+        ResultActions resultActions = this.mockMvc.perform(post(this.baseUrl + "/users/login").with(httpBasic("eric", "Test@123"))); // httpBasic() is from spring-security-test.
+        MvcResult mvcResult = resultActions.andDo(print()).andReturn();
+        String contentAsString = mvcResult.getResponse().getContentAsString();
+        JSONObject json = new JSONObject(contentAsString);
+        String ericToken = "Bearer " + json.getJSONObject("data").getString("token");
+
+        HogwartsUser hogwartsUser = new HogwartsUser();
+        hogwartsUser.setUsername("tom123"); // Username is changed. It was eric.
+        hogwartsUser.setEnabled(false);
+        hogwartsUser.setRoles("user");
+
+        String hogwartsUserJson = this.objectMapper.writeValueAsString(hogwartsUser);
+
+        this.mockMvc.perform(put(this.baseUrl + "/users/3").contentType(MediaType.APPLICATION_JSON).content(hogwartsUserJson).accept(MediaType.APPLICATION_JSON).header(HttpHeaders.AUTHORIZATION, ericToken))
+                .andExpect(jsonPath("$.flag").value(false))
+                .andExpect(jsonPath("$.code").value(StatusCode.FORBIDDEN))
+                .andExpect(jsonPath("$.message").value("No permission."))
+                .andExpect(jsonPath("$.data").value("Access Denied"));
+    }
+
+    @Test
     @DisplayName("Check deleteUser with valid input (DELETE)")
     void testDeleteUserSuccess() throws Exception {
         this.mockMvc.perform(delete(this.baseUrl + "/users/2").accept(MediaType.APPLICATION_JSON).header(HttpHeaders.AUTHORIZATION, this.token))
@@ -227,7 +310,7 @@ public class HogwartsUserControllerIntegrationTest {
     @Test
     @DisplayName("Check deleteUser with insufficient permission (DELETE)")
     void testDeleteUserNoAccessAsRoleUser() throws Exception {
-        ResultActions resultActions = this.mockMvc.perform(post(this.baseUrl + "/users/login").with(httpBasic("eric", "654321"))); // httpBasic() is from spring-security-test.
+        ResultActions resultActions = this.mockMvc.perform(post(this.baseUrl + "/users/login").with(httpBasic("eric", "Test@123"))); // httpBasic() is from spring-security-test.
         MvcResult mvcResult = resultActions.andDo(print()).andReturn();
         String contentAsString = mvcResult.getResponse().getContentAsString();
         JSONObject json = new JSONObject(contentAsString);
