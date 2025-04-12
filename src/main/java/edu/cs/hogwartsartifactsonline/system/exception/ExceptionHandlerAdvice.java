@@ -126,6 +126,12 @@ public class ExceptionHandlerAdvice {
         return new Result(false, StatusCode.INTERNAL_SERVER_ERROR, ex.getMessage(), ex.getCause().getMessage());
     }
 
+    @ExceptionHandler(ClassCastException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public Result handleClassCastException(ClassCastException ex) {
+        return new Result(false, StatusCode.FORBIDDEN, "Invalid Class cast type", "Access Denied");
+    }
+
     /**
      * Fallback handles any unhandled exceptions.
      * @param ex
