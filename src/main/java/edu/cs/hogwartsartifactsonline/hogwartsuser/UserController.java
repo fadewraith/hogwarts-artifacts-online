@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("${api.endpoint.base-url}/users")
@@ -73,6 +74,14 @@ public class UserController {
         return new Result(true, StatusCode.SUCCESS, "Delete Success");
     }
 
-
+//    spring web mvc that binds the http request body to map object in controller method
+    @PatchMapping("/{userId}/password")
+    public Result changePassword(@PathVariable Integer userId, @RequestBody Map<String, String> passwordMap) {
+        String oldPassword = passwordMap.get("oldPassword");
+        String newPassword = passwordMap.get("newPassword");
+        String confirmNewPassword = passwordMap.get("confirmNewPassword");
+        this.userService.changePassword(userId, oldPassword, newPassword, confirmNewPassword);
+        return new Result(true, StatusCode.SUCCESS, "Change Password Success", null);
+    }
 
 }
